@@ -145,3 +145,4 @@ pnpm-lock.yaml
 pnpm-workspace.yaml
 .vscode/
 *-workspace
+node_modules/
