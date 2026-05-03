@@ -1,83 +1,179 @@
-import { Cliente } from "./types/Cliente.js"
-import { Pedido } from "./types/Pedido.js"
-import { Produto } from "./types/Produto.js"
-import { ItemPedido } from "./types/ItemPedido.js"
+import { ClientePessoaFisica } from "./models/Cliente/ClientePessoaFisica.js"
+import { ClientePessoaJuridica } from "./models/Cliente/ClientePessoaJuridica.js"
+import { ProdutoFisico } from "./models/Produto/ProdutoFisico.js"
+import { ProdutoDigital } from "./models/Produto/ProdutoDigital.js"
+import { ItemCarrinho } from "./models/Pedido/ItemCarrinho.js"
+import { Pedido } from "./models/Pedido/Pedido.js"
 
-//Testando a loja
-console.log("Bem-vindo à minha loja!")
+console.log("  SEÇÃO 1 — INSTÂNCIAS DAS CLASSES\n")
 
-//Cadastro de produtos
-console.log(`\nCadastrando produtos...`)
+// (id, nome, preco, peso, descricao, estoque)
+const camiseta = new ProdutoFisico(1, "Camiseta", 49.9, 0.3, "Camiseta de algodão", 10)
+// (id, nome, preco, link, descricao, estoque)
+const cursoTs = new ProdutoDigital(2, "Curso TypeScript", 79.9, "https://ada.tech/curso-ts", "Curso completo de TypeScript", 999)
+// (id, email, nome, sobrenome, idade, cpf)
+const joao = new ClientePessoaFisica(1, "joao.silva@example.com", "João", "Silva", 30, "12345678901")
+// (id, email, razaoSocial, cnpj)
+const empresaABC = new ClientePessoaJuridica(2, "contato@abc.com.br", "ABC Comércio Ltda", 12345678000195)
 
-const produto1 = new Produto(1, "Camiseta", 49.9)
-const produto2 = new Produto(2, "Calça Jeans", 99.9)
-const produto3 = new Produto(3, "Tênis", 149.9)
+console.log(`  ProdutoFisico  : ${camiseta.nome} | R$${camiseta.preco} | Estoque: ${camiseta.estoque} | Peso: ${camiseta.peso}kg`)
+console.log(`  ProdutoDigital : ${cursoTs.nome} | R$${cursoTs.preco} | Link: ${cursoTs.link}`)
+console.log(`  ClientePF      : ${joao.nomeCompleto()} | ${joao.email} | CPF: ${joao.cpf}`)
+console.log(`  ClientePJ      : ${empresaABC.razaoSocial} | CNPJ: ${empresaABC.cnpj} | ${empresaABC.email}`)
 
-//Cadastro de clientes
-console.log(`\nCadastrando clientes...`)
+console.log("  SEÇÃO 2 — VALIDAÇÕES NOS SETTERS\n")
 
-const cliente1 = new Cliente(1, "João Silva", "joao.silva@example.com")
-const cliente2 = new Cliente(2, "Maria Oliveira", "maria.oliveira@example.com")
+console.log("--- Produto: ID inválido (≤ 0) ---")
+const prodIdInvalido = new ProdutoFisico(-1, "Produto Inválido", 10, 0.1, "desc", 1)
+console.log(`  ID resultante: ${prodIdInvalido.id} (esperado: 0 — setter rejeitou)\n`)
 
-//Gerando novos pedidos
-console.log(`\nGerando pedidos...`)
+console.log("--- Produto: preço inválido (≤ 0) ---")
+const prodPrecoInvalido = new ProdutoFisico(6, "Produto Barato", -10, 0.1, "desc", 1)
+console.log(`  Preço resultante: ${prodPrecoInvalido.preco} (esperado: 1 — valor padrão)\n`)
 
-const pedido1 = new Pedido(1, new Date())
-pedido1.adicionarItem(new ItemPedido(produto1, 2))
-pedido1.adicionarItem(new ItemPedido(produto3, 1))
+console.log("--- Produto: nome muito curto ---")
+const prodNomeCurto = new ProdutoFisico(7, "AB", 10, 0.1, "desc", 1)
+console.log(`  Nome resultante: "${prodNomeCurto.nome}" (esperado: "" — setter rejeitou)\n`)
 
-cliente1.adicionarPedido(pedido1)
-cliente1.mostrarPedido(pedido1.id)
+console.log("--- Produto: estoque negativo ---")
+const prodEstoqueNeg = new ProdutoFisico(8, "Produto Teste", 20, 0.5, "desc", -5)
+console.log(`  Estoque resultante: ${prodEstoqueNeg.estoque} (esperado: 0 — setter rejeitou)\n`)
 
-pedido1.pagar()
-pedido1.enviar()
-pedido1.entregar()
-cliente1.mostrarPedidos()
-console.log(`---------\n`)
+console.log("--- Cliente PF: nome muito curto ---")
+const clienteNomeInvalido = new ClientePessoaFisica(9, "teste@email.com", "A", "Silva", 20, "12345678901")
+console.log(`  Nome resultante: "${clienteNomeInvalido.nome}" (esperado: "" — setter rejeitou)\n`)
 
-const pedido2 = new Pedido(2, new Date())
-pedido2.adicionarItem(new ItemPedido(produto2, 1))
-pedido2.adicionarItem(new ItemPedido(produto3, 2))
+console.log("--- Cliente PF: email inválido ---")
+const clienteEmailInvalido = new ClientePessoaFisica(10, "emailsemarroba", "Carlos", "Lima", 28, "12345678901")
+console.log(`  Email resultante: "${clienteEmailInvalido.email}" (esperado: "" — setter rejeitou)\n`)
 
-cliente1.adicionarPedido(pedido2)
-cliente1.mostrarPedido(pedido2.id)
+console.log("--- Cliente PF: idade errada ---")
+const clienteIdadeInvalida = new ClientePessoaFisica(11, "idoso@email.com", "Velho", "Demais", 200, "12345678901")
+console.log(`  Idade resultante: ${clienteIdadeInvalida.idade} (esperado: 0 — setter rejeitou)\n`)
 
-cliente1.mostrarPedidos()
-console.log(`---------\n`)
+console.log("--- Cliente PJ: CNPJ com quantidade errada de dígitos ---")
+try {
+  const pjCnpjInvalido = new ClientePessoaJuridica(12, "pj@email.com", "Empresa Inválida", 123)
+  console.log(`  CNPJ resultante: ${pjCnpjInvalido.cnpj}`)
+} catch (e: any) {
+  console.log(`  Erro capturado (esperado): ${e.message}\n`)
+}
 
-const pedido3 = new Pedido(3, new Date())
-pedido3.adicionarItem(new ItemPedido(produto1, 1))
+console.log("  SEÇÃO 3 — LÓGICA DO CARRINHO\n")
 
-cliente2.adicionarPedido(pedido3)
-cliente2.mostrarPedido(pedido3.id)
+const itemCamisa = new ItemCarrinho(camiseta, 2)
+console.log(`  Criado ItemCarrinho: ${camiseta.nome} x${itemCamisa.quantidade} | Estoque reservado: ${camiseta.estoque}\n`)
 
-pedido3.pagar()
-pedido3.enviar()
-cliente2.mostrarPedidos()
+console.log("--- Merge: adicionar mais do mesmo produto ---")
+itemCamisa.adicionarQuantidade(3)
+console.log(`  Quantidade: ${itemCamisa.quantidade} (esperado: 5) | Estoque: ${camiseta.estoque}\n`)
 
-console.log(`Testando serialização JSON...\n`)
+console.log("--- Tentar adicionar além do estoque disponível ---")
+itemCamisa.adicionarQuantidade(999)
+console.log(`  Quantidade: ${itemCamisa.quantidade}\n`)
 
-const jsonPedido1 = JSON.stringify(pedido1.toJSON())
-const jsonPedido2 = JSON.stringify(pedido2.toJSON())
-const jsonPedido3 = JSON.stringify(pedido3.toJSON())
+console.log("--- Remover quantidade parcial ---")
+itemCamisa.removerQuantidade(2)
+console.log(`  Quantidade: ${itemCamisa.quantidade} (esperado: 3) | Estoque devolvido: ${camiseta.estoque}\n`)
 
-console.log(`Pedido 1: ${jsonPedido1}\n`)
-console.log(`Pedido 2: ${jsonPedido2}\n`)
-console.log(`Pedido 3: ${jsonPedido3}\n`)
+console.log("--- calcularTotal via joao ---")
+joao.adicionarAoCarrinho(camiseta, 2)
+joao.adicionarAoCarrinho(cursoTs, 1)
 
-console.log(`Testando deserialização JSON...\n`)
+console.log(`  Total esperado: R$${(2 * 49.9 + 79.9).toFixed(2)}`)
+console.log(`  Total calculado: R$${joao.calcularTotalCarrinho().toFixed(2)}\n`)
 
-const pedido1Deserializado = Pedido.fromData(JSON.parse(jsonPedido1))
+console.log("  SEÇÃO 4 — CICLO DE STATUS DO PEDIDO\n")
 
-const pedido2Deserializado = Pedido.fromData(JSON.parse(jsonPedido2))
+joao.finalizarCompra() // pedido #1 → pendente
+joao.mostrarPedido(1)
 
-const pedido3Deserializado = Pedido.fromData(JSON.parse(jsonPedido3))
+console.log("--- Tentar enviar sem pagar (transição inválida) ---")
+joao.enviarPedido(1)
 
-console.log(`Pedido 1 Deserializado:\n`)
-pedido1Deserializado.imprimirPedido()
+console.log("--- Pagar ---")
+joao.pagarPedido(1)
 
-console.log(`Pedido 2 Deserializado:\n`)
-pedido2Deserializado.imprimirPedido()
+console.log("--- Tentar pagar novamente (transição inválida) ---")
+joao.pagarPedido(1)
 
-console.log(`Pedido 3 Deserializado:\n`)
-pedido3Deserializado.imprimirPedido()
+console.log("--- Enviar e entregar ---")
+joao.enviarPedido(1)
+joao.entregarPedido(1)
+joao.mostrarPedido(1)
+
+console.log("  SEÇÃO 5 — CONTROLE DE ESTOQUE\n")
+
+console.log(`  Estoque inicial: ${camiseta.estoque}`) // 5
+
+camiseta.alterarEstoque(-3) // 5 → 2
+console.log(`  Após baixar 3: ${camiseta.estoque} (esperado: 2)`)
+
+camiseta.alterarEstoque(-10) // guard, stays 2
+console.log(`  Após tentar baixar 10 (inválido): ${camiseta.estoque} (esperado: 2)`)
+
+camiseta.alterarEstoque(8) // 2 → 10
+console.log(`  Após repor 8: ${camiseta.estoque} (esperado: 10)\n`)
+
+console.log("  SEÇÃO 6 — SERIALIZAÇÃO E DESSERIALIZAÇÃO")
+
+const prodFisicoRecriado = ProdutoFisico.fromData(JSON.parse(JSON.stringify(camiseta.toJSON())))
+console.log("--- ProdutoFisico ---")
+console.log(`  Original : ${camiseta.nome} | R$${camiseta.preco} | ${camiseta.estoque} un`)
+console.log(`  Recriado : ${prodFisicoRecriado.nome} | R$${prodFisicoRecriado.preco} | ${prodFisicoRecriado.estoque} un\n`)
+
+const prodDigitalRecriado = ProdutoDigital.fromData(JSON.parse(JSON.stringify(cursoTs.toJSON())))
+console.log("--- ProdutoDigital ---")
+console.log(`  Original : ${cursoTs.nome} | ${cursoTs.link}`)
+console.log(`  Recriado : ${prodDigitalRecriado.nome} | ${prodDigitalRecriado.link}\n`)
+
+const pfRecriado = ClientePessoaFisica.fromData(JSON.parse(JSON.stringify(joao.toJSON())))
+console.log("--- ClientePessoaFisica ---")
+console.log(`  Original : ${joao.nomeCompleto()} | ${joao.email}`)
+console.log(`  Recriado : ${(pfRecriado as ClientePessoaFisica).nomeCompleto()} | ${pfRecriado.email}\n`)
+
+const pjRecriado = ClientePessoaJuridica.fromData(JSON.parse(JSON.stringify(empresaABC.toJSON())))
+console.log("--- ClientePessoaJuridica ---")
+console.log(`  Original : ${empresaABC.razaoSocial} | CNPJ: ${empresaABC.cnpj}`)
+console.log(`  Recriado : ${(pjRecriado as ClientePessoaJuridica).razaoSocial} | CNPJ: ${(pjRecriado as ClientePessoaJuridica).cnpj}\n`)
+
+const pedidoSerial = new Pedido(80, new Date())
+pedidoSerial.adicionarItem(new ItemCarrinho(camiseta, 1)) // camiseta: 10 → 9
+pedidoSerial.pagar()
+const pedidoRecriado = Pedido.fromData(JSON.parse(JSON.stringify(pedidoSerial.toJSON())))
+console.log("--- Pedido ---")
+console.log(`  Original : Pedido #${pedidoSerial.id} | Status: ${pedidoSerial.status} | Total: R$${pedidoSerial.valorTotal()}`)
+console.log(`  Recriado : Pedido #${pedidoRecriado.id} | Status: ${pedidoRecriado.status} | Total: R$${pedidoRecriado.valorTotal()}\n`)
+
+console.log("  SEÇÃO 7 — FLUXO COMPLETO\n")
+
+joao.adicionarAoCarrinho(camiseta, 2) // camiseta: 9 → 7
+joao.adicionarAoCarrinho(cursoTs, 1) // cursoTs: 998 → 997
+joao.adicionarAoCarrinho(camiseta, 1) // merge: 3×camiseta | camiseta: 7 → 6
+console.log(`  Total no carrinho: R$${joao.calcularTotalCarrinho().toFixed(2)}`)
+console.log(`  (esperado: 3 × R$49.90 + 1 × R$79.90 = R$${(3 * 49.9 + 79.9).toFixed(2)})\n`)
+
+joao.removerDoCarrinho(camiseta.id, 1) // 2×camiseta | camiseta: 6 → 7
+console.log(`  Após remover 1 camiseta: R$${joao.calcularTotalCarrinho().toFixed(2)}`)
+console.log(`  (esperado: 2 × R$49.90 + 1 × R$79.90 = R$${(2 * 49.9 + 79.9).toFixed(2)})\n`)
+
+console.log("--- Finalizar compra (joao) — pedido #2 ---")
+joao.finalizarCompra()
+
+console.log("--- Tentar finalizar com carrinho vazio ---")
+try {
+  joao.finalizarCompra()
+} catch (e: any) {
+  console.log(`  Erro capturado (esperado): ${e.message}\n`)
+}
+
+console.log("--- Histórico completo de pedidos (joao) ---")
+joao.mostrarPedidos()
+
+console.log("--- empresaABC: compra e histórico ---")
+empresaABC.adicionarAoCarrinho(cursoTs, 3) // cursoTs: 997 → 994
+empresaABC.finalizarCompra()
+empresaABC.pagarPedido(1)
+empresaABC.mostrarPedidos()
+
+console.log("  FIM DOS TESTES")

@@ -1,12 +1,15 @@
-import { ItemPedido } from "./ItemPedido.js"
+import { StatusPedido } from "../../types/StatusPedido.js"
+import { ItemCarrinho } from "./ItemCarrinho.js"
+
 export class Pedido {
   private _id: number = 0
   private _data: Date = new Date()
-  private _status: string = "pendente"
-  private _itens: ItemPedido[] = []
+  private _status: StatusPedido = StatusPedido.PENDENTE
+  private _itens: ItemCarrinho[] = []
 
   constructor(id: number, data: Date) {
     this.id = id
+    this.data = data
   }
 
   public get id(): number {
@@ -21,12 +24,40 @@ export class Pedido {
     this._id = novoId
   }
 
-  public get status(): string {
+  public get data(): Date {
+    return this._data
+  }
+
+  private set data(novaData: Date) {
+    if (novaData > new Date()) {
+      console.error("A data do pedido não pode ser no futuro!")
+      return
+    }
+    this._data = novaData
+  }
+
+  public get status(): StatusPedido {
     return this._status
   }
 
-  public get data(): Date {
-    return this._data
+  private set status(novoStatus: StatusPedido) {
+    if (!Object.values(StatusPedido).includes(novoStatus)) {
+      console.error("Status do pedido inválido!")
+      return
+    }
+    this._status = novoStatus
+  }
+
+  public get itens(): ItemCarrinho[] {
+    return this._itens
+  }
+
+  private set itens(novosItens: ItemCarrinho[]) {
+    this._itens = novosItens
+  }
+
+  public adicionarItem(item: ItemCarrinho): void {
+    this._itens.push(item)
   }
 
   public valorTotal(): number {
@@ -36,38 +67,30 @@ export class Pedido {
     )
   }
 
-  public adicionarItem(item: ItemPedido): void {
-    this._itens.push(item)
-  }
-
-  public get itens(): ItemPedido[] {
-    return this._itens
-  }
-
   public pagar(): void {
-    if (this._status != "pendente") {
+    if (this._status !== StatusPedido.PENDENTE) {
       console.error("Não é possível pagar este pedido!")
       return
     }
-    this._status = "pago"
+    this._status = StatusPedido.PAGO
     console.log(`Pedido #${this.id} pago com sucesso!`)
   }
 
   public enviar(): void {
-    if (this._status != "pago") {
+    if (this._status !== StatusPedido.PAGO) {
       console.error("Não é possível enviar este pedido!")
       return
     }
-    this._status = "enviado"
+    this._status = StatusPedido.ENVIADO
     console.log(`Pedido #${this.id} enviado com sucesso!`)
   }
 
   public entregar(): void {
-    if (this._status != "enviado") {
+    if (this._status !== StatusPedido.ENVIADO) {
       console.error("Não é possível entregar este pedido!")
       return
     }
-    this._status = "entregue"
+    this._status = StatusPedido.ENTREGUE
     console.log(`Pedido #${this.id} entregue com sucesso!`)
   }
 
@@ -95,8 +118,10 @@ export class Pedido {
 
   public static fromData(json: any): Pedido {
     const novoPedido = new Pedido(json.id, new Date(json.data))
-    novoPedido._status = json.status
-    novoPedido._itens = json.itens.map((item: any) => ItemPedido.fromData(item))
+    novoPedido._status = json.status as StatusPedido
+    novoPedido.itens = Array.isArray(json.itens)
+      ? json.itens.map((item: any) => ItemCarrinho.fromData(item))
+      : []
     return novoPedido
   }
 }

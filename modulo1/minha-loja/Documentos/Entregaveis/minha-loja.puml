@@ -1,0 +1,190 @@
+@startuml minha-loja
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+hide empty members
+
+title Diagrama de Classes — Minha Loja
+
+' ─────────────────────────────────────────────
+' ENUMS
+' ─────────────────────────────────────────────
+enum StatusPedido {
+  PENDENTE = "pendente"
+  PAGO = "pago"
+  ENVIADO = "enviado"
+  ENTREGUE = "entregue"
+}
+
+' ─────────────────────────────────────────────
+' INTERFACES
+' ─────────────────────────────────────────────
+interface Pessoa {
+  + nome: string
+  + sobrenome: string
+  + idade: number
+  + cpf: number
+  + nomeCompleto(): string
+}
+
+interface Empresa {
+  + razaoSocial: string
+  + cnpj: number
+}
+
+' ─────────────────────────────────────────────
+' HIERARQUIA DE PRODUTO (classe abstrata)
+' ─────────────────────────────────────────────
+abstract class Produto {
+  - _id: number
+  - _nome: string
+  - _preco: number
+  - _descricao: string
+  - _estoque: number
+  + Produto(id, nome, preco, descricao, estoque)
+  + id: number <<get>>
+  # id: number <<set>>
+  + nome: string <<get>>
+  # nome: string <<set>>
+  + preco: number <<get>>
+  # preco: number <<set>>
+  + descricao: string <<get>>
+  # descricao: string <<set>>
+  + estoque: number <<get>>
+  # estoque: number <<set>>
+  + alterarEstoque(quantidade: number): void
+  + {abstract} toJSON(): object
+  + {static} fromData(json: any): Produto
+}
+
+class ProdutoFisico {
+  - _peso: number
+  + ProdutoFisico(id, nome, preco, peso, descricao, estoque)
+  + peso: number <<get>>
+  + peso: number <<set>>
+  + toJSON(): object
+  + {static} fromData(json: any): ProdutoFisico
+}
+
+class ProdutoDigital {
+  - _link: string
+  + ProdutoDigital(id, nome, preco, link, descricao, estoque)
+  + link: string <<get>>
+  + link: string <<set>>
+  + toJSON(): object
+  + {static} fromData(json: any): ProdutoDigital
+}
+
+ProdutoFisico --|> Produto
+ProdutoDigital --|> Produto
+
+' ─────────────────────────────────────────────
+' PEDIDO / CARRINHO / ITEM
+' ─────────────────────────────────────────────
+class ItemCarrinho {
+  - _produto: Produto
+  - _quantidade: number
+  + ItemCarrinho(produto: Produto, quantidade: number)
+  + produto: Produto <<get>>
+  + quantidade: number <<get>>
+  + adicionarQuantidade(quantidade: number): void
+  + removerQuantidade(quantidade: number): void
+  + toJSON(): object
+  + {static} fromData(json: any): ItemCarrinho
+}
+
+class Carrinho {
+  - _itens: ItemCarrinho[]
+  + itens: ItemCarrinho[] <<get>>
+  + adicionarProduto(produto: Produto, quantidade: number): void
+  + removerProduto(produtoId: number, quantidade: number): void
+  + calcularTotal(): number
+  + gerarPedido(id: number): Pedido
+  + toJSON(): object
+}
+
+class Pedido {
+  - _id: number
+  - _data: Date
+  - _status: StatusPedido
+  - _itens: ItemCarrinho[]
+  + Pedido(id: number, data: Date)
+  + id: number <<get>>
+  + data: Date <<get>>
+  + status: StatusPedido <<get>>
+  + status: StatusPedido <<set>>
+  + itens: ItemCarrinho[] <<get>>
+  + adicionarItem(item: ItemCarrinho): void
+  + valorTotal(): number
+  + pagar(): void
+  + enviar(): void
+  + entregar(): void
+  + imprimirPedido(): void
+  + toJSON(): object
+  + {static} fromData(json: any): Pedido
+}
+
+Pedido "1" *-- "0..*" ItemCarrinho : itens
+Carrinho "1" *-- "0..*" ItemCarrinho : _itens
+ItemCarrinho "1" --> "1" Produto : _produto
+Pedido --> StatusPedido : status
+
+' ─────────────────────────────────────────────
+' HIERARQUIA DE CLIENTE (classe abstrata)
+' ─────────────────────────────────────────────
+abstract class Cliente {
+  - _id: number
+  - _email: string
+  - _pedidos: Pedido[]
+  - _carrinho: Carrinho
+  + Cliente(id: number, email: string)
+  + id: number <<get>>
+  # id: number <<set>>
+  + email: string <<get>>
+  # email: string <<set>>
+  + adicionarAoCarrinho(produto, quantidade): void
+  + removerDoCarrinho(produtoId, quantidade): void
+  + calcularTotalCarrinho(): number
+  + finalizarCompra(): void
+  + mostrarPedidos(): void
+  + mostrarPedido(pedidoId: number): void
+  + valorGasto(): number
+  + {abstract} toJSON(): object
+}
+
+class ClientePessoaFisica {
+  - _nome: string
+  - _sobrenome: string
+  - _idade: number
+  - _cpf: number
+  + ClientePessoaFisica(id, email, nome, sobrenome, idade, cpf)
+  + nome: string <<get/set>>
+  + sobrenome: string <<get/set>>
+  + idade: number <<get/set>>
+  + cpf: number <<get/set>>
+  + nomeCompleto(): string
+  + toJSON(): object
+  + {static} fromData(json: any): Cliente
+}
+
+class ClientePessoaJuridica {
+  - _razaoSocial: string
+  - _cnpj: number
+  + ClientePessoaJuridica(id, email, razaoSocial, cnpj)
+  + razaoSocial: string <<get>>
+  - razaoSocial: string <<set>>
+  + cnpj: number <<get>>
+  - cnpj: number <<set>>
+  + toJSON(): object
+  + {static} fromData(json: any): Cliente
+}
+
+ClientePessoaFisica --|> Cliente
+ClientePessoaJuridica --|> Cliente
+
+ClientePessoaFisica ..|> Pessoa
+ClientePessoaJuridica ..|> Empresa
+
+Cliente "1" *-- "1" Carrinho : _carrinho
+Cliente "1" *-- "0..*" Pedido : _pedidos
+
+@enduml
